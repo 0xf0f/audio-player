@@ -1,6 +1,7 @@
 from weakref import ref as old_ref
 from weakref import WeakMethod as ref
 
+
 class _IterationGuard:
     # This context manager registers itself in the current iterators of the
     # weak container, such as to delay all removals until the context manager

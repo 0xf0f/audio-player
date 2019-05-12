@@ -1,6 +1,6 @@
 import io
 import numpy as np
-import audioread as ar
+from . import audioread as ar
 
 from .event_handling import Event
 
