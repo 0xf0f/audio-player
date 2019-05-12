@@ -1,15 +1,94 @@
 from testing import qt
+import multiprocessing as mp
+import threading as th
 from audio_player import AudioPlayerProcess
+from types import MethodType
 
 # This test requires PyQt5 to work.
 
+# class Test:
+# 	a = 1
+# 	b = 2
+# 	c = 3
+#
+# Test.__dict__
 
-class TestWindow(qt.QWidget):
+
+# class Test:
+#     for i in range(10):
+#         print(i)
+
+def format_time(milliseconds):
+    seconds, milliseconds = divmod(milliseconds, 1000)
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+
+    result = f'{minutes:02}:{seconds:02}.{milliseconds:03}'
+    if hours:
+        result = f'{hours:02}:{result}'
+
+    return result
+
+
+class QAudioPlayerProcess(AudioPlayerProcess):
+    class Signals(qt.QObject):
+        file_changed = qt.pyqtSignal(str)
+        state_changed = qt.pyqtSignal(str)
+        duration_changed = qt.pyqtSignal(float, int, int)
+        position_changed = qt.pyqtSignal(float)
+
+    class SignalThread(qt.QThread):
+        def __init__(
+            self,
+            signal_queue: mp.Queue,
+            signals: 'QAudioPlayerProcess.Signals'
+        ):
+            super().__init__()
+            self.event_queue = signal_queue
+            self.signals = signals
+
+        def run(self):
+            while True:
+                name, args, kwargs = self.event_queue.get()
+                if name == 'position_changed':
+                    self.signals.position_changed.emit(args[0])
+
+                elif name == 'duration_changed':
+                    self.signals.duration_changed.emit(
+                        kwargs['seconds'], kwargs['bytes'], kwargs['samples']
+                    )
+
+                elif name == 'state_changed':
+                    self.signals.state_changed.emit(args[0])
+
+    def __init__(self):
+        super().__init__()
+        self.event_queue = mp.Queue()
+
+    def process_init(self):
+        super().process_init()
+
+        from audio_player.event_handling import Event
+
+        def queue_event(source: Event, *args, **kwargs):
+            self.event_queue.put_nowait((source.name, args, kwargs))
+
+        for event in self.audio_player.events:
+            event.emit = MethodType(queue_event, event)
+
+    def get_signal_thread(self):
+        signals = QAudioPlayerProcess.Signals()
+        signal_thread = QAudioPlayerProcess.SignalThread(
+            self.event_queue, signals
+        )
+        return signals, signal_thread
+
+
+class AudioPlayerWindow(qt.QWidget):
     def __init__(self):
         super().__init__()
 
-        self.player_process = AudioPlayerProcess()
-        self.player_process.start()
+        self.player_process = QAudioPlayerProcess()
 
         self.drop_label = qt.QLabel('Drop files here to play.')
         self.drop_label.setAlignment(qt.Constants.AlignCenter)
@@ -19,7 +98,7 @@ class TestWindow(qt.QWidget):
         self.play_button = qt.QPushButton('Play')
         self.play_button.clicked.connect(
             lambda: self.player_process.send_command(
-                'toggle_playing'
+                'toggle'
             )
         )
 
@@ -81,10 +160,28 @@ class TestWindow(qt.QWidget):
             )
         )
 
+        position_label_font = qt.QFont()
+        position_label_font.setPointSize(16)
+
+        self.position = 0
+        self.duration = 0
+        self.position_label = qt.QLabel()
+        self.position_label.setFont(position_label_font)
+        self.position_label.setAlignment(qt.Constants.AlignCenter)
+
+        def update_position_label():
+            self.position_label.setText(
+                f'{format_time(int(self.position*self.duration))}/'
+                f'{format_time(self.duration)}'
+            )
+
+        update_position_label()
+
         self.vboxwidget = qt.QWidget()
         self.vboxlayout = qt.QVBoxLayout(self.vboxwidget)
         self.vboxlayout.addWidget(self.drop_label)
         self.vboxlayout.addStretch()
+        self.vboxlayout.addWidget(self.position_label)
         self.vboxlayout.addWidget(self.play_button)
         self.vboxlayout.addWidget(self.replay_button)
         self.vboxlayout.addWidget(self.stop_button)
@@ -96,8 +193,41 @@ class TestWindow(qt.QWidget):
         self.hboxlayout.addWidget(self.volume_slider)
         self.hboxlayout.addWidget(self.vboxwidget)
 
+        (
+            self.player_process_signals,
+            self.player_process_signal_thread
+        ) = self.player_process.get_signal_thread()
+
+        def on_duration_changed(duration):
+            self.duration = int(duration*1000)
+            update_position_label()
+
+        def on_position_changed(position):
+            self.position = position
+            update_position_label()
+
+        def on_state_changed(state):
+            if state == 'playing':
+                self.play_button.setText('Pause')
+            else:
+                self.play_button.setText('Play')
+
+        self.player_process_signals.duration_changed.connect(
+            on_duration_changed
+        )
+
+        self.player_process_signals.position_changed.connect(
+            on_position_changed
+        )
+
+        self.player_process_signals.state_changed.connect(
+            on_state_changed
+        )
+
         self.setWindowTitle('Audio Player')
         self.setAcceptDrops(True)
+        self.player_process_signal_thread.start()
+        self.player_process.start()
 
     def dragEnterEvent(self, event: qt.QDragEnterEvent):
         mime_data: qt.QMimeData = event.mimeData()
@@ -116,10 +246,12 @@ class TestWindow(qt.QWidget):
 
 if __name__ == '__main__':
     def main():
-        app = qt.QApplication([])
+        import sys
+        app = qt.QApplication(sys.argv)
+        sys.excepthook = sys.__excepthook__
 
-        test_window = TestWindow()
-        test_window.show()
+        audio_player_window = AudioPlayerWindow()
+        audio_player_window.show()
 
         app.exec()
 

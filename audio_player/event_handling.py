@@ -1,6 +1,7 @@
 from weakref import ref
 from .weak_method_set import WeakMethodSet
 from inspect import ismethod
+import multiprocessing as mp
 
 
 class EventData:
@@ -56,8 +57,26 @@ class Event:
             callback(self, *args, **kwargs)
 
 
-if __name__ == '__main__':
+# class EventQueue:
+#     def __init__(self, base_type=mp.Queue):
+#         self.queue = base_type()
+#
+#     def push(self, ):
 
+class EventList:
+    def __init__(self, source):
+        self.source = source
+        self.events = []
+
+    def add_event(self, name):
+        event = Event(name, self.source)
+        self.events.append(event)
+        return event
+
+    def __iter__(self):
+        yield from self.events
+
+if __name__ == '__main__':
     class MouseEnteredEventData(EventData):
         def __init__(self, x, y):
             self.x = x

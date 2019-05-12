@@ -1,4 +1,8 @@
 import multiprocessing as mp
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .audio_player import AudioPlayer
 
 
 class AudioPlayerProcess(mp.Process):
@@ -8,52 +12,62 @@ class AudioPlayerProcess(mp.Process):
         self.daemon = True
         self.command_queue = mp.Queue()
 
-    def run(self) -> None:
-        from .event_handling import Event
-        Event.emit = (
-            lambda event, *args, **kwargs: print(event.source, event.name, args, kwargs)
-        )
+        self.audio_player: 'AudioPlayer' = None
 
+    def process_init(self):
+        """
+        Called when the child process is starting up.
+        Executed inside the child process.
+        """
         from .audio_player import AudioPlayer
-        player = AudioPlayer()
-        player.resume()
+        self.audio_player = AudioPlayer()
+        self.audio_player.resume()
+
+    def run(self) -> None:
+        self.process_init()
 
         while True:
             command, params = self.command_queue.get()
 
-            print(command, params)
+            # print(command, params)
 
             if command == 'play':
                 if params:
                     path = params[0]
-                    player.set_file(path)
+                    self.audio_player.set_file(path)
 
                 # player.rewind()
-                player.resume()
+                self.audio_player.resume()
 
             elif command == 'rewind':
-                player.rewind()
+                self.audio_player.rewind()
 
             elif command == 'pause':
-                player.pause()
+                self.audio_player.pause()
 
             elif command == 'resume':
-                player.resume()
+                self.audio_player.resume()
 
             elif command == 'stop':
-                player.stop()
+                self.audio_player.stop()
+
+            elif command == 'toggle':
+                if self.audio_player.state == 'playing':
+                    self.audio_player.pause()
+                else:
+                    self.audio_player.resume()
 
             elif command == 'set_looping':
-                player.settings.set_looping(params[0])
+                self.audio_player.settings.set_looping(params[0])
 
             elif command == 'set_volume':
-                player.settings.set_volume(params[0])
+                self.audio_player.settings.set_volume(params[0])
 
             elif command == 'set_pan':
-                player.settings.set_pan(params[0])
+                self.audio_player.settings.set_pan(params[0])
 
             elif command == 'set_playback_rate':
-                player.settings.set_playback_rate(params[0])
+                self.audio_player.settings.set_playback_rate(params[0])
 
     def send_command(self, command, *params):
         self.command_queue.put_nowait(
