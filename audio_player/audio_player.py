@@ -12,7 +12,7 @@ from .audio_player_settings import AudioFilePlayerSettings
 
 from .event_handling import Event, EventList
 
-from audioread.exceptions import DecodeError
+from .audioread.exceptions import DecodeError
 
 
 class AudioPlayer:

@@ -1,8 +1,14 @@
-from testing import qt
+import sys
+from pathlib import Path
+
+cd: Path = Path(__file__).parent
+sys.path.append(str(cd))
+sys.path.append(str(cd.parent))
+
 import multiprocessing as mp
-import threading as th
 from audio_player import AudioPlayerProcess
 from types import MethodType
+from examples import qt
 
 # This test requires PyQt5 to work.
 

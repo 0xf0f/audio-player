@@ -8,14 +8,11 @@ class EventData:
     pass
 
 
-def default_event_emission(event: 'Event', *args, **kwargs):
-    event.propagate_callbacks(*args, **kwargs)
+# def default_event_emission(event: 'Event', *args, **kwargs):
+#     event.propagate_callbacks(*args, **kwargs)
 
 
 class Event:
-    emit = default_event_emission
-    source = None
-
     def __init__(self, name=None, source=None):
         super().__init__()
 
@@ -23,6 +20,8 @@ class Event:
 
         if source is not None:
             self.source = ref(source)
+        else:
+            self.source = None
 
         self.callback_methods = WeakMethodSet()
         self.callback_functions = set()
@@ -56,12 +55,14 @@ class Event:
         for callback in self.callback_functions:
             callback(self, *args, **kwargs)
 
+    emit = propagate_callbacks
 
 # class EventQueue:
 #     def __init__(self, base_type=mp.Queue):
 #         self.queue = base_type()
 #
 #     def push(self, ):
+
 
 class EventList:
     def __init__(self, source):
@@ -75,6 +76,7 @@ class EventList:
 
     def __iter__(self):
         yield from self.events
+
 
 if __name__ == '__main__':
     class MouseEnteredEventData(EventData):
