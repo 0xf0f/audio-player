@@ -2,10 +2,14 @@ import io
 import numpy as np
 import audioread as ar
 
-from .event_handling import EventEmitter
+from .event_handling import Event
 
 
-class AudioBuffer(EventEmitter):
+class AudioBuffer:
+    class Events:
+        def __init__(self, source: 'AudioBuffer'):
+            self.file_exhausted = Event('file_exhausted', source)
+
     def __init__(self, path):
         self.path = path
 
@@ -17,10 +21,12 @@ class AudioBuffer(EventEmitter):
         self.bytes_per_second = self.file.samplerate * self.bytes_per_sample
 
         self.total_bytes = int(self.file.duration * self.bytes_per_second)
-        self.total_samples = self.total_bytes / self.bytes_per_sample
+        self.total_samples = self.total_bytes // self.bytes_per_sample
 
         self.buffer = io.BytesIO()
         self.buffer_length = 0
+
+        self.events = AudioBuffer.Events(self)
 
         # self.preread_seconds(0.05)
 
@@ -40,7 +46,7 @@ class AudioBuffer(EventEmitter):
             except StopIteration:
                 self.file_exhausted = True
                 self.file.close()
-                self.event('file_exhausted')
+                self.events.file_exhausted()
 
         self.buffer.seek(current)
 

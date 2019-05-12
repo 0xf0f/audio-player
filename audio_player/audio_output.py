@@ -5,10 +5,15 @@ import numpy as np
 from .playback_settings import PlaybackSettings
 from .block_processing import process_block
 
-from .event_handling import EventEmitter
+from .event_handling import Event
 
 
-class AudioOutput(EventEmitter):
+class AudioOutput:
+    class Events:
+        def __init__(self, source: 'AudioOutput'):
+            self.stream_started = Event('stream_started', source)
+            self.stream_stopped = Event('stream_stopped', source)
+
     def __init__(self, samplerate, channels, master_settings: PlaybackSettings):
         self.stream = sd.OutputStream(
             samplerate=samplerate, channels=channels,
@@ -19,6 +24,8 @@ class AudioOutput(EventEmitter):
         self.master_settings = master_settings
 
         self.resampler = sr.Resampler(channels=channels)
+
+        self.events = AudioOutput.Events(self)
 
     def write(self, data: np.ndarray):
         volume = (
@@ -53,8 +60,8 @@ class AudioOutput(EventEmitter):
 
     def start(self):
         self.stream.start()
-        self.event('stream_started')
+        self.events.stream_started()
 
     def stop(self):
         self.stream.stop()
-        self.event('stream_stopped')
+        self.events.stream_stopped()

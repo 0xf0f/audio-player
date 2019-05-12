@@ -34,8 +34,7 @@ class TestWindow(qt.QWidget):
         self.stop_button = qt.QPushButton('Stop')
         self.stop_button.clicked.connect(
             lambda: (
-                self.player_process.send_command('pause'),
-                self.player_process.send_command('rewind'),
+                self.player_process.send_command('stop'),
             )
         )
 

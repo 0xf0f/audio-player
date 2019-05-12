@@ -21,8 +21,9 @@ def process_block(
             if pan < 0:
                 left, right = right, left
 
-            right *= 1-(abs_pan/2)
-            right += left*(abs_pan/2)
+            # right *= 1-(abs_pan/2)
+            # right += left*(abs_pan/2)
+            right += left*abs_pan
             left *= 1-abs_pan
 
     return data

@@ -9,12 +9,12 @@ class AudioPlayerProcess(mp.Process):
         self.command_queue = mp.Queue()
 
     def run(self) -> None:
-        from .event_handling import EventEmitter
-        EventEmitter.event_callback = (
-            lambda source, name, *args, **kwargs: print(source, name, args, kwargs)
+        from .event_handling import Event
+        Event.emit = (
+            lambda event, *args, **kwargs: print(event.source, event.name, args, kwargs)
         )
 
-        from audio_player import AudioPlayer
+        from .audio_player import AudioPlayer
         player = AudioPlayer()
         player.resume()
 
@@ -41,8 +41,7 @@ class AudioPlayerProcess(mp.Process):
                 player.resume()
 
             elif command == 'stop':
-                player.pause()
-                player.rewind()
+                player.stop()
 
             elif command == 'set_looping':
                 player.settings.set_looping(params[0])

@@ -10,13 +10,20 @@ from .audio_buffer_cache import ExceedsCacheSize
 
 from .audio_player_settings import AudioFilePlayerSettings
 
-from .event_handling import EventEmitter
+from .event_handling import Event
 
 from audioread.exceptions import DecodeError
 
 
-class AudioPlayer(EventEmitter):
+class AudioPlayer:
     active_buffer: AudioBuffer
+
+    class Events:
+        def __init__(self, source: 'AudioPlayer'):
+            self.file_changed = Event('file_changed', source)
+            self.state_changed = Event('state_changed', source)
+            self.position_changed = Event('position_changed', source)
+            self.duration_changed = Event('duration_changed', source)
 
     def __init__(self):
         self.output_cache = AudioOutputCache()
@@ -24,6 +31,7 @@ class AudioPlayer(EventEmitter):
         self.active_buffer: AudioBuffer = None
 
         self.settings = AudioFilePlayerSettings()
+        self.events = AudioPlayer.Events(self)
 
         self.paused = th.Event()
 
@@ -51,6 +59,11 @@ class AudioPlayer(EventEmitter):
 
             if new_active_buffer:
                 new_active_buffer.seek(0)
+                self.events.duration_changed(
+                    seconds=new_active_buffer.file.duration,
+                    bytes=new_active_buffer.total_bytes,
+                    samples=new_active_buffer.total_samples,
+                )
 
             self.active_buffer = new_active_buffer
 
@@ -84,12 +97,20 @@ class AudioPlayer(EventEmitter):
             buffer = self.active_buffer
 
             if buffer:
+                self.events.position_changed(
+                    buffer.tell()/buffer.total_bytes
+                )
+
                 if buffer.file_exhausted and buffer.tell() == len(buffer):
                     if self.settings.looping:
                         buffer.seek(0)
                     else:
                         self.stop()
                         continue
+
+                # self.events.position_changed(
+                #     buffer.tell()/buffer.total_bytes
+                # )
 
                 chunk = buffer.read(4096, numpy_array=True)
 
@@ -109,27 +130,27 @@ class AudioPlayer(EventEmitter):
 
     def play(self, path):
         self.set_file(path)
-        self.event('file_changed', path)
+        self.events.file_changed(path)
 
         self.paused.set()
-        self.event('state_changed', 'playing')
+        self.events.state_changed('playing')
 
     def stop(self):
         self.paused.clear()
 
         if self.active_buffer:
             self.active_buffer.seek(0)
+            self.events.position_changed(0)
 
-        self.event('state_changed', 'stopped')
-        # self.set_file(None)
+        self.events.state_changed('stopped')
 
     def resume(self):
         self.paused.set()
-        self.event('state_changed', 'playing')
+        self.events.state_changed('playing')
 
     def pause(self):
         self.paused.clear()
-        self.event('state_changed', 'paused')
+        self.events.state_changed('paused')
 
     def rewind(self):
         if self.active_buffer:
