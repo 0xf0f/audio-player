@@ -1,0 +1,2 @@
+- Modify the audioread module to allow seeking
+- Output waveform data from AudioPlayer
