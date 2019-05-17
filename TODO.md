@@ -7,3 +7,4 @@
 
 - Add waiting methods to AudioPlayer and AudioPlayerProcessInterface
 - Replace placeholder seekbar for large files with realtime waveform visualization
+- MIDI file support.
