@@ -1,87 +1,56 @@
 import threading as th
-import time
 
 from .audio_output import AudioOutput
 from .audio_output_cache import AudioOutputCache
 
-from .audio_buffer import AudioBuffer
-from .audio_buffer_cache import AudioBufferCache
-from .audio_buffer_cache import ExceedsCacheSize
-
-from .audio_player_settings import AudioFilePlayerSettings
-
-from .event_handling import Event, EventList
-
-from .audioread.exceptions import DecodeError
+from .lib.signals import SignalList
+from .lib import audio_file as af
 
 
 class AudioPlayer:
-    active_buffer: AudioBuffer
+    class States:
+        stopped = 'stopped'
+        playing = 'playing'
+        paused = 'paused'
 
-    class Events(EventList):
-        def __init__(self, source: 'AudioPlayer'):
-            super().__init__(source)
+    class Settings(AudioOutput.Settings):
+        def __init__(self):
+            super().__init__()
+            self.looping = self.add_setting('looping', False)
 
-            self.file_changed = self.add_event('file_changed')
-            self.state_changed = self.add_event('state_changed')
-            self.position_changed = self.add_event('position_changed')
-            self.duration_changed = self.add_event('duration_changed')
+    class Signals(SignalList):
+        def __init__(self):
+            super().__init__()
+
+            self.file_changed = self.add_signal('file_changed')
+            self.state_changed = self.add_signal('state_changed')
+            self.position_changed = self.add_signal('position_changed')
+            self.duration_changed = self.add_signal('duration_changed')
 
     def __init__(self):
         self.output_cache = AudioOutputCache()
-        self.buffer_cache = AudioBufferCache()
-        self.active_buffer: AudioBuffer = None
+        self.file: af.audio_file.AudioFile = None
 
-        self.settings = AudioFilePlayerSettings()
-        self.events = AudioPlayer.Events(self)
+        self.signals = AudioPlayer.Signals()
+        self.settings = AudioPlayer.Settings()
 
         self.paused = th.Event()
 
-        self.play_loop_thread = th.Thread(target=self.play_loop, daemon=True)
-        self.play_loop_thread.start()
+        self.audio_loop_thread = th.Thread(target=self.audio_loop, daemon=True)
+        self.audio_loop_thread.start()
 
-        self.state = 'stopped'
+        self.state = AudioPlayer.States.stopped
 
     def set_file(self, path):
-        active_buffer = self.active_buffer
+        try:
+            self.file = af.open(path)
+            self.signals.file_changed(path)
+            self.signals.duration_changed(self.file.info.duration)
 
-        if path:
-            try:
-                new_active_buffer = self.buffer_cache.get(path)
-            except KeyError:
-                try:
-                    new_active_buffer = AudioBuffer(path)
-
-                except DecodeError:
-                    new_active_buffer = None
-
-
-            # self.get_output(
-            #     new_active_buffer.file.samplerate,
-            #     new_active_buffer.file.channels
-            # )
-
-            if new_active_buffer:
-                new_active_buffer.seek(0)
-                self.events.duration_changed(
-                    seconds=new_active_buffer.file.duration,
-                    bytes=new_active_buffer.total_bytes,
-                    samples=new_active_buffer.total_samples,
-                )
-
-            self.active_buffer = new_active_buffer
-
-        else:
-            self.active_buffer = None
-
-        if active_buffer:
-            try:
-                self.buffer_cache.put(
-                    active_buffer.path,
-                    active_buffer
-                )
-            except ExceedsCacheSize:
-                pass
+        except af.UnableToOpenFileError:
+            self.file = None
+            self.signals.file_changed(None)
+            self.signals.duration_changed(0)
 
     def get_output(self, samplerate, channels):
         try:
@@ -94,39 +63,31 @@ class AudioPlayer:
             self.output_cache[samplerate, channels] = new_output
             return new_output
 
-    def play_loop(self):
+    def audio_loop(self):
+        # block = np.empty()
         while True:
             self.paused.wait()
-
-            buffer = self.active_buffer
-
-            if buffer:
-                self.events.position_changed(
-                    buffer.tell()/buffer.total_bytes
+            file = self.file
+            if file:
+                self.signals.position_changed(
+                    file.tell_time()
                 )
 
-                if buffer.file_exhausted and buffer.tell() == len(buffer):
-                    if self.settings.looping:
-                        buffer.seek(0)
+                block = self.file.read(4096)
+
+                if not block.size:
+                    if self.settings.looping.get():
+                        self.file.seek_time(0)
+                        block = self.file.read(4096)
                     else:
                         self.stop()
                         continue
 
-                # self.events.position_changed(
-                #     buffer.tell()/buffer.total_bytes
-                # )
+                self.get_output(
+                    file.info.sample_rate,
+                    file.info.channels
 
-                chunk = buffer.read(4096, numpy_array=True)
-
-                output = self.get_output(
-                    buffer.file.samplerate,
-                    buffer.file.channels
-                )
-
-                samplerate = buffer.file.samplerate
-                samples_written = output.write(chunk)
-
-                time.sleep(samples_written / samplerate / 4)
+                ).write(block)
 
             else:
                 self.stop()
@@ -135,33 +96,42 @@ class AudioPlayer:
     def set_state(self, state):
         if self.state != state:
             self.state = state
-            self.events.state_changed(state)
+            self.signals.state_changed(state)
 
-    def play(self, path):
+    def play(self, path=None):
         self.set_file(path)
-        self.events.file_changed(path)
+        self.signals.file_changed(path)
 
         self.paused.set()
-        self.set_state('playing')
+        self.set_state(AudioPlayer.States.playing)
+
+    def toggle(self):
+        if self.state == AudioPlayer.States.playing:
+            self.pause()
+        else:
+            self.resume()
 
     def stop(self):
         self.paused.clear()
 
-        if self.active_buffer:
-            self.active_buffer.seek(0)
-            self.events.position_changed(0)
+        if self.file:
+            self.file.seek_time(0)
+            self.signals.position_changed(0)
 
-        self.set_state('stopped')
+        self.set_state(AudioPlayer.States.stopped)
 
     def resume(self):
         self.paused.set()
-        self.set_state('playing')
+        self.set_state(AudioPlayer.States.playing)
 
     def pause(self):
         self.paused.clear()
-        self.set_state('paused')
+        self.set_state(AudioPlayer.States.paused)
 
     def rewind(self):
-        if self.active_buffer:
-            self.active_buffer.seek(0)
+        if self.file:
+            self.file.seek_time(0)
 
+    def seek_time(self, seconds):
+        if self.file:
+            self.file.seek_time(seconds)

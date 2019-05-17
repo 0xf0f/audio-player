@@ -1,3 +1,0 @@
-- Modify the audioread module to allow seeking
-- Output waveform data from AudioPlayer
-- Add the ability to play multiple files in a playlist

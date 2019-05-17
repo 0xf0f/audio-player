@@ -11,7 +11,7 @@ root.withdraw()
 file_path = filedialog.askopenfilename()
 
 audio_player = AudioPlayer()
-audio_player.settings.set_looping(True)
+audio_player.settings.looping.set(True)
 audio_player.play(file_path)
 
 Event().wait()

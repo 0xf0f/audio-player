@@ -13,7 +13,9 @@ setup(
     install_requires=[
         'numpy',
         'numba',
+        'soundfile',
         'sounddevice',
-        'samplerate'
+        'samplerate',
+        # 'pymediainfo',
     ]
 )

@@ -2,54 +2,65 @@ import samplerate as sr
 import sounddevice as sd
 import numpy as np
 
-from .playback_settings import PlaybackSettings
-from .block_processing import process_block
+from .audio_processing import process_vpb
 
-from .event_handling import Event
+from .lib.settings import SettingList
+from .lib.signals import SignalList
 
 
 class AudioOutput:
-    class Events:
-        def __init__(self, source: 'AudioOutput'):
-            self.stream_started = Event('stream_started', source)
-            self.stream_stopped = Event('stream_stopped', source)
+    class Settings(SettingList):
+        def __init__(self):
+            super().__init__()
 
-    def __init__(self, samplerate, channels, master_settings: PlaybackSettings):
+            self.volume = self.add_setting('volume', 1)
+            self.pan = self.add_setting('pan', 0)
+            self.playback_rate = self.add_setting('playback_rate', 1)
+            self.balance = self.add_setting('balance', 0)
+
+    class Signals(SignalList):
+        def __init__(self):
+            super().__init__()
+            self.stream_started = self.add_signal('stream_started')
+            self.stream_stopped = self.add_signal('stream_stopped')
+
+    def __init__(self, samplerate, channels, master_settings: 'AudioOutput.Settings'):
         self.stream = sd.OutputStream(
             samplerate=samplerate, channels=channels,
             blocksize=4092, dtype='float32'
         )
 
-        self.settings = PlaybackSettings()
+        self.signals = AudioOutput.Signals()
+        self.settings = AudioOutput.Settings()
+
         self.master_settings = master_settings
 
         self.resampler = sr.Resampler(channels=channels)
 
-        self.events = AudioOutput.Events(self)
-
     def write(self, data: np.ndarray):
         volume = (
-            self.settings.volume *
-            self.master_settings.volume
+            self.settings.volume.get() *
+            self.master_settings.volume.get()
         )
 
         pan = (
-            self.master_settings.pan
+            # self.settings.pan.get()
+            self.master_settings.pan.get()
         )
 
         balance = (
-            self.settings.balance +
-            self.master_settings.balance
+            self.settings.balance.get() +
+            self.master_settings.balance.get()
         )
 
-        data = process_block(data, volume, pan, balance)
+        data = process_vpb(data, volume, pan, balance)
 
         playback_rate = (
-            self.settings.playback_rate *
-            self.master_settings.playback_rate
+            self.settings.playback_rate.get() *
+            self.master_settings.playback_rate.get()
         )
 
-        data = self.resampler.process(data, playback_rate)
+        data = self.resampler.process(data, 1/playback_rate)
 
         try:
             self.stream.write(data)
@@ -60,8 +71,8 @@ class AudioOutput:
 
     def start(self):
         self.stream.start()
-        self.events.stream_started()
+        self.signals.stream_started()
 
     def stop(self):
         self.stream.stop()
-        self.events.stream_stopped()
+        self.signals.stream_stopped()

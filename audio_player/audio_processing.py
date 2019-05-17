@@ -3,7 +3,7 @@ from numba import jit
 
 
 @jit(nopython=True, nogil=True, parallel=True)
-def process_block(
+def process_vpb(
         data: np.ndarray,
         volume: float,
         pan: float,
@@ -13,7 +13,9 @@ def process_block(
         data *= volume
 
     if volume:
-        if pan:
+        if pan and data.shape[1] == 2:
+            # if data.shape[1] == 1:
+            #     data = np.repeat(data[:, np.newaxis], 2, 1)
             abs_pan = abs(pan)
             left: np.ndarray = data[:, 0]
             right: np.ndarray = data[:, 1]
