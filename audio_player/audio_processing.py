@@ -13,7 +13,7 @@ def process_vpb(
         data *= volume
 
     if volume:
-        if pan and data.shape[1] == 2:
+        if pan and data.ndim == 2 and data.shape[1] == 2:
             # if data.shape[1] == 1:
             #     data = np.repeat(data[:, np.newaxis], 2, 1)
             abs_pan = abs(pan)
