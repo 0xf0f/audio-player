@@ -27,7 +27,7 @@ class AudioOutput:
     def __init__(self, samplerate, channels, master_settings: 'AudioOutput.Settings'):
         self.stream = sd.OutputStream(
             samplerate=samplerate, channels=channels,
-            blocksize=4092, dtype='float32'
+            blocksize=0, dtype='float32'
         )
 
         self.signals = AudioOutput.Signals()
