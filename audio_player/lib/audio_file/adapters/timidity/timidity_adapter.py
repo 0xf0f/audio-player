@@ -12,11 +12,16 @@ from ... import UnableToOpenFileError
 class TiMidityInfo(AudioInfo):
     def __init__(self, path):
         super().__init__(path)
-        midi_object = mido.MidiFile(path)
-        self.channels = 2
-        self.sample_rate = 44100
-        self.sample_count = int(midi_object.length * self.sample_rate)
-        pass
+        try:
+            midi_object = mido.MidiFile(path)
+            self.channels = 2
+            self.sample_rate = 44100
+            self.sample_count = int(midi_object.length * self.sample_rate)
+            return
+        except (OSError, FileNotFoundError):
+            pass
+
+        raise UnableToOpenFileError(path)
 
     def channels(self) -> int:
         pass

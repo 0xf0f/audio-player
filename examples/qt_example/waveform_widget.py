@@ -107,9 +107,8 @@ class WaveformGenerationThread(qt.QThread):
         return 1
 
     def run(self):
-        while True:
-            if self.generate():
-                break
+        while not self.generate():
+            pass
 
 
 class WaveformWidget(qt.QWidget):
