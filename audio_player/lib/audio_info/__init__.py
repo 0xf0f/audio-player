@@ -25,7 +25,7 @@ def open(path) -> _AudioInfo:
         try:
             return adapter_type(path)
         except UnableToOpenFileError:
-            print('nope', path, adapter_type)
+            # print('nope', path, adapter_type)
             pass
 
     raise UnableToOpenFileError(path)
