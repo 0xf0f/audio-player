@@ -101,11 +101,6 @@ class AudioPlayerWindow(qt.QWidget):
         self.hboxlayout.addWidget(self.volume_slider)
         self.hboxlayout.addWidget(self.vboxwidget)
 
-        # (
-        #     self.player_process_signals,
-        #     self.player_process_signal_thread
-        # ) = self.player_process.get_signal_thread()
-
         def on_duration_changed(duration):
             self.duration = int(duration*1000)
             self.seek_bar.setMaximum(self.duration)
@@ -117,8 +112,7 @@ class AudioPlayerWindow(qt.QWidget):
                 self.seek_bar.setSliderPosition(
                     position*1000
                 )
-            # if self.seek_bar.mouse_down:
-                # self.seek_bar.setSliderPosition(int(100*position/self.duration))
+
             update_position_label()
 
         def on_state_changed(state):

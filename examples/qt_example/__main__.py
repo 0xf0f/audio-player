@@ -10,17 +10,16 @@ if __name__ == '__main__':
     sys.path.append(str(cd.parent))
     sys.path.append(str(cd.parent.parent))
 
-    from quicklogger.templates import DefaultLoggingTemplate
-    lg = DefaultLoggingTemplate()
-    lg.intercept_except_hook()
-    lg.outs[:] = (
-        open('log.txt', 'a'),
-        sys.stderr
-    )
+    # from quicklogger.templates import DefaultLoggingTemplate
+    # lg = DefaultLoggingTemplate()
+    # lg.intercept_except_hook()
+    # lg.outs[:] = (
+    #     open('log.txt', 'a'),
+    #     sys.stderr
+    # )
 
     app = qt.QApplication(sys.argv)
-    # from audio_player import AudioPlayerProcessInterface, AudioPlayer
-    # player = AudioPlayer()
+
     audio_player_window = AudioPlayerWindow()
     audio_player_window.show()
 
