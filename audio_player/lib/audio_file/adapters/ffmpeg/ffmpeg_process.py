@@ -5,7 +5,7 @@ import sys
 def decode(
     path, from_position=0, sample_rate=None, channels=None
 ):
-    print('from_position', from_position)
+    # print('from_position', from_position)
     format_options = []
     if sample_rate is not None:
         format_options.extend(('-ar', f'{sample_rate}'))
@@ -22,5 +22,5 @@ def decode(
             '-'
         ],
         stdout=sp.PIPE,
-        stderr=sys.stderr
+        stderr=sp.DEVNULL
     )
