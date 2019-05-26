@@ -1,29 +1,14 @@
 from abc import ABC, abstractmethod
+from typing import Tuple
 from cached_property import cached_property as cachedproperty
 import numpy as np
 
 from ..audio_info.audio_info import AudioInfo
 
-adapter_types = []
-
 
 class AudioFile(ABC):
     info: AudioInfo
-
-    class UnableToOpenFileError(Exception):
-        def __init__(self, path):
-            super().__init__(f'Error occurred while opening {path}')
-
-    @staticmethod
-    def open(path, dtype=np.float32) -> 'AudioFile':
-        for adapter_type in adapter_types:
-            try:
-                result = adapter_type(path, dtype)
-                return result
-            except AudioFile.UnableToOpenFileError:
-                pass
-
-        raise AudioFile.UnableToOpenFileError(path)
+    supported_extensions: Tuple
 
     @abstractmethod
     def __init__(self, path, dtype=np.float32):

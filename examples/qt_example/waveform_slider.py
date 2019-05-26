@@ -10,7 +10,6 @@ class WaveformSlider(ClickableSlider, WaveformWidget):
         super().__init__()
         self.setOrientation(qt.constants.Horizontal)
         self.setMaximum(100)
-        # self.setFixedHeight(64)
         self.setFixedHeight(96)
 
     def paintEvent(self, event: qt.QPaintEvent):

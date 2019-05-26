@@ -1,17 +1,37 @@
-from . import audio_file as _audio_file
-open = _audio_file.AudioFile.open
-UnableToOpenFileError = _audio_file.AudioFile.UnableToOpenFileError
+import numpy as np
+from .audio_file import AudioFile as _AudioFile
+from ..exceptions import UnableToOpenFileError
+
+adapter_types = []
 
 try:
-    from .adapters.soundfile_adapter import SoundFileAdapter as _SoundFileAdapter
-    _audio_file.adapter_types.append(_SoundFileAdapter)
+    from .adapters.soundfile import SoundFileAdapter as _SoundFileAdapter
+    adapter_types.append(_SoundFileAdapter)
 except ImportError:
     _SoundFileAdapter = None
     pass
 
 try:
-    from .adapters.ffmpeg_adapter import FFMPEGAdapter as _FFMPEGAdapter
-    _audio_file.adapter_types.append(_FFMPEGAdapter)
+    from .adapters.ffmpeg import FFMPEGAdapter as _FFMPEGAdapter
+    adapter_types.append(_FFMPEGAdapter)
 except ImportError as e:
     _FFMPEGAdapter = None
     pass
+
+try:
+    from .adapters.timidity import TiMidityAdapter as _TiMidityAdapter
+    adapter_types.append(_TiMidityAdapter)
+except ImportError as e:
+    _TiMidityAdapter = None
+    pass
+
+
+def open(path, dtype=np.float32) -> _AudioFile:
+    for adapter_type in adapter_types:
+        # print(adapter_type)
+        try:
+            return adapter_type(path, dtype)
+        except UnableToOpenFileError:
+            pass
+
+    raise UnableToOpenFileError(path)

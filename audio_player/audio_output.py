@@ -3,35 +3,19 @@ import sounddevice as sd
 import numpy as np
 
 from .audio_processing import process_vpb
-
-from .lib.settings import SettingList
-from .lib.signals import SignalList
+from .audio_output_signals import Signals as AudioOutputSignals
+from .audio_output_settings import Settings as AudioOutputSettings
 
 
 class AudioOutput:
-    class Settings(SettingList):
-        def __init__(self):
-            super().__init__()
-
-            self.volume = self.add_setting('volume', 1)
-            self.pan = self.add_setting('pan', 0)
-            self.playback_rate = self.add_setting('playback_rate', 1)
-            self.balance = self.add_setting('balance', 0)
-
-    class Signals(SignalList):
-        def __init__(self):
-            super().__init__()
-            self.stream_started = self.add_signal('stream_started')
-            self.stream_stopped = self.add_signal('stream_stopped')
-
-    def __init__(self, samplerate, channels, master_settings: 'AudioOutput.Settings'):
+    def __init__(self, samplerate, channels, master_settings: AudioOutputSettings):
         self.stream = sd.OutputStream(
             samplerate=samplerate, channels=channels,
-            blocksize=4092, dtype='float32'
+            blocksize=0, dtype='float32'
         )
 
-        self.signals = AudioOutput.Signals()
-        self.settings = AudioOutput.Settings()
+        self.signals = AudioOutputSignals()
+        self.settings = AudioOutputSettings()
 
         self.master_settings = master_settings
 

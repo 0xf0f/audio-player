@@ -157,3 +157,8 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+/scrap/
+/audio_player/lib/audio_file/adapters/sox/
+/audio_player/lib/audio_file/adapters/sox/sox_adapter.py
+/audio_player/lib/audio_file/adapters/sox/__init__.py
+/audio_player/lib/audio_file/adapters/sox/sox_process.py

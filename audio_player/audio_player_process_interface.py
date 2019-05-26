@@ -1,10 +1,12 @@
-from .audio_player import AudioPlayer
+# from .audio_player import AudioPlayer
 from .audio_player_process import AudioPlayerProcess
 import threading as th
 
+from .audio_player_settings import Settings as AudioPlayerSettings
+from .audio_player_signals import Signals as AudioPlayerSignals
 
 class AudioPlayerProcessInterface:
-    class Settings(AudioPlayer.Settings):
+    class Settings(AudioPlayerSettings):
         def __init__(self, controller: 'AudioPlayerProcessInterface'):
             super().__init__()
 
@@ -20,7 +22,7 @@ class AudioPlayerProcessInterface:
                     pipe_to_command(setting.name)
                 )
 
-    class Signals(AudioPlayer.Signals):
+    class Signals(AudioPlayerSignals):
         pass
 
     class SignalThread(th.Thread):

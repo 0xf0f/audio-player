@@ -1,11 +1,8 @@
 from . import qt
 import numpy as np
-import traceback
 from pathlib import Path
 
 from audio_player.lib import audio_file as af
-
-# max_abs = np.ufunc.map_reduce(np.abs, np.maximum)
 
 
 def max_abs(array: np.ndarray):
@@ -53,8 +50,6 @@ class WaveformGenerationThread(qt.QThread):
                     return None
 
                 painter_path.addRect(x, height*.25, 1, height*.5)
-                # painter_path.moveTo(x, height*.25)
-                # painter_path.lineTo(x, height*.75)
 
         else:
             frame_count = file.info.sample_count
@@ -107,9 +102,8 @@ class WaveformGenerationThread(qt.QThread):
         return 1
 
     def run(self):
-        while True:
-            if self.generate():
-                break
+        while not self.generate():
+            pass
 
 
 class WaveformWidget(qt.QWidget):
@@ -123,9 +117,6 @@ class WaveformWidget(qt.QWidget):
         self.resize_timer.setSingleShot(True)
         self.resize_timer.timeout.connect(self.resize_done)
 
-        # self.setFrameStyle(qt.QFrame.Sunken)
-        # self.setLineWidth(2)
-        # self.setFrameShape(qt.QFrame.Raised)
 
     def waveform_updated(self):
         self.pixmap = self.waveform_generation_thread.pixmap
