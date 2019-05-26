@@ -35,6 +35,7 @@ class TiMidityInfo(AudioInfo):
 
 class TiMidityAdapter(AudioFile):
     info: AudioInfo
+    process = None
 
     def __init__(self, path, dtype=np.float32):
         super().__init__(path, dtype)
@@ -44,7 +45,7 @@ class TiMidityAdapter(AudioFile):
             self.samples_read = 0
             self.read_lock = th.Lock()
             return
-        except UnableToOpenFileError:
+        except (FileNotFoundError, UnableToOpenFileError):
             pass
 
         raise UnableToOpenFileError(path)
