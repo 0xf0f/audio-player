@@ -1,5 +1,8 @@
 import multiprocessing as mp
-from .audio_player import AudioPlayer
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .audio_player import AudioPlayer
 
 
 class AudioPlayerProcess(mp.Process):
@@ -19,6 +22,7 @@ class AudioPlayerProcess(mp.Process):
         Executed inside the child process.
         """
 
+        from audio_player import AudioPlayer
         self.audio_player = AudioPlayer()
 
         def pipe_to_queue(signal_name):

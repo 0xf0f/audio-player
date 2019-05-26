@@ -2,7 +2,8 @@
   - ~~FFMPEG decoder seems tricky in particular.~~
 
 - Output waveform data from AudioPlayer
-
+	- For things like rendering visualizations.
+	
 - Add the ability to play multiple files in a playlist
 
 - Mono panning.
@@ -24,13 +25,18 @@
 	- Can use tempfs to store the temporary config files.
 
 - Playing files from URLs. FFMPEG supports this, but things like looping will require a
-	buffering mechanism.
+	buffering mechanism. i.e. buffer first/last 10-30 seconds of file, stream rest.
 	
 - Ability to play in reverse.
+	- FFMPEG cant do fast seeking when reversed.
+	- Soundfile
 
 - SoX pipeline.
 	- Also look for other processing modules. PYO seems interesting but unfortunately
 	doesnt support past 3.6.
+	- Doesn't seem to be any way to make it work synchronously. Have to find a way
+	to transmit samplerate/channel dare per block. Also a way to switch/change the
+	SoX process at any time.
 
 - Fast adapter selection - A dict mapping extensions to adapters.
 	- If extension is not in map then it defaults back to slow selection,

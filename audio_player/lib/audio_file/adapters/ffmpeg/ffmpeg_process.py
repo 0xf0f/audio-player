@@ -1,4 +1,5 @@
 import subprocess as sp
+import sys
 
 
 def decode(
@@ -17,8 +18,9 @@ def decode(
             '-i', path,
             '-f', 'f32le',
             *format_options,
+            # '-af', 'areverse',
             '-'
         ],
         stdout=sp.PIPE,
-        stderr=sp.DEVNULL
+        stderr=sys.stderr
     )

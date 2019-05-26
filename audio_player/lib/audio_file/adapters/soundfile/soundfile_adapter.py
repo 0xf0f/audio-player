@@ -1,9 +1,9 @@
 import numpy as np
 import soundfile as sf
 from cached_property import cached_property as cachedproperty
-from audio_player.lib.audio_info.audio_info import AudioInfo
 from audio_player.lib.audio_file.audio_file import AudioFile
-from audio_player.lib.exceptions import UnableToOpenFileError
+from audio_player.lib.audio_info.audio_info import AudioInfo
+from ... import UnableToOpenFileError
 
 
 class SoundFileAdapterInfo(AudioInfo):
@@ -30,10 +30,8 @@ class SoundFileAdapter(AudioFile):
     info: AudioInfo
 
     supported_extensions = (
-        'mid',
-        'mod',
-        's3m'
-        'xm',
+        'wav',
+        'flac',
     )
 
     def __init__(self, path, dtype=np.float32):

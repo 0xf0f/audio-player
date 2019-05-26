@@ -1,4 +1,4 @@
-import qt
+from . import qt
 
 
 class ClickableSlider(qt.QSlider):

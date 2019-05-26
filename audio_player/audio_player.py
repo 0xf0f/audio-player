@@ -3,8 +3,11 @@ import threading as th
 from .audio_output import AudioOutput
 from .audio_output_cache import AudioOutputCache
 
-from .lib.signals import SignalList
-from .lib import audio_file as af
+from audio_player.lib import audio_file as af
+from audio_player.lib.audio_file.audio_file import AudioFile
+
+from .audio_player_settings import Settings as AudioPlayerSettings
+from .audio_player_signals import Signals as AudioPlayerSignals
 
 
 class AudioPlayer:
@@ -13,26 +16,12 @@ class AudioPlayer:
         playing = 'playing'
         paused = 'paused'
 
-    class Settings(AudioOutput.Settings):
-        def __init__(self):
-            super().__init__()
-            self.looping = self.add_setting('looping', False)
-
-    class Signals(SignalList):
-        def __init__(self):
-            super().__init__()
-
-            self.file_changed = self.add_signal('file_changed')
-            self.state_changed = self.add_signal('state_changed')
-            self.position_changed = self.add_signal('position_changed')
-            self.duration_changed = self.add_signal('duration_changed')
-
     def __init__(self):
         self.output_cache = AudioOutputCache()
-        self.file: af.audio_file.AudioFile = None
+        self.file: AudioFile = None
 
-        self.signals = AudioPlayer.Signals()
-        self.settings = AudioPlayer.Settings()
+        self.signals = AudioPlayerSignals()
+        self.settings = AudioPlayerSettings()
 
         self.paused = th.Event()
 

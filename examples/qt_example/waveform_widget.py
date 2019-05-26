@@ -1,9 +1,9 @@
 from . import qt
 import numpy as np
-import traceback
 from pathlib import Path
 
 from audio_player.lib import audio_file as af
+
 
 # max_abs = np.ufunc.map_reduce(np.abs, np.maximum)
 

@@ -28,6 +28,7 @@ except ImportError as e:
 
 def open(path, dtype=np.float32) -> _AudioFile:
     for adapter_type in adapter_types:
+        print(adapter_type)
         try:
             return adapter_type(path, dtype)
         except UnableToOpenFileError:
