@@ -19,5 +19,7 @@ setup(
         'samplerate',
         'cached_property'
         # 'pymediainfo',
-    ]
+    ],
+
+    include_package_data=True,
 )
