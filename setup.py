@@ -12,7 +12,7 @@ setup(
 
     install_requires=[
         'mido',
-        'numba',
+        # 'numba',
         'numpy',
         'soundfile',
         'sounddevice',
