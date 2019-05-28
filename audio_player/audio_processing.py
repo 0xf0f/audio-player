@@ -1,8 +1,8 @@
 import numpy as np
-from numba import jit
+# from numba import jit
 
 
-@jit(nopython=True, nogil=True, parallel=True, cache=True, no_rewrites=True)
+# @jit(nopython=True, nogil=True, parallel=True, cache=True, no_rewrites=True)
 def process_vpb(
         data: np.ndarray,
         volume: float,
