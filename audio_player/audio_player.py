@@ -8,13 +8,12 @@ from audio_player.lib.audio_file.audio_file import AudioFile
 
 from .audio_player_settings import Settings as AudioPlayerSettings
 from .audio_player_signals import Signals as AudioPlayerSignals
+from .audio_player_states import States as AudioPlayerStates
 
 
 class AudioPlayer:
-    class States:
-        stopped = 'stopped'
-        playing = 'playing'
-        paused = 'paused'
+    class States(AudioPlayerStates):
+        pass
 
     def __init__(self):
         self.output_cache = AudioOutputCache()

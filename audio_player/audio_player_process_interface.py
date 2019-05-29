@@ -4,8 +4,13 @@ import threading as th
 
 from .audio_player_settings import Settings as AudioPlayerSettings
 from .audio_player_signals import Signals as AudioPlayerSignals
+from .audio_player_states import States as AudioPlayerStates
+
 
 class AudioPlayerProcessInterface:
+    class States(AudioPlayerStates):
+        pass
+
     class Settings(AudioPlayerSettings):
         def __init__(self, controller: 'AudioPlayerProcessInterface'):
             super().__init__()
