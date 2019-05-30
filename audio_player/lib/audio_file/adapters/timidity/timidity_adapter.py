@@ -18,7 +18,8 @@ class TiMidityInfo(AudioInfo):
             self.sample_rate = 44100
             self.sample_count = int(midi_object.length * self.sample_rate)
             return
-        except (OSError, FileNotFoundError):
+
+        except (OSError, FileNotFoundError, EOFError):
             pass
 
         raise UnableToOpenFileError(path)
