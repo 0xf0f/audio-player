@@ -8,6 +8,8 @@ from .audio_player_states import States as AudioPlayerStates
 
 
 class AudioPlayerProcessInterface:
+    process = None
+
     class States(AudioPlayerStates):
         pass
 
@@ -53,6 +55,10 @@ class AudioPlayerProcessInterface:
 
         self.signal_thread = AudioPlayerProcessInterface.SignalThread(self)
         self.signal_thread.start()
+
+    def __del__(self):
+        if self.process:
+            self.process.terminate()
 
     def start_process(self):
         self.process.start()
