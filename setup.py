@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='audio-player',
-    # version='0.3.1',
+    version='190531.0',
     packages=find_packages(),
     url='https://github.com/0xf0f/audio-player',
     license='MIT',
@@ -21,12 +21,12 @@ setup(
         # 'pymediainfo',
     ],
 
-    version_config={
-        "version_format": "{tag}.dev{sha}",
-        "starting_version": "0.1.0"
-    },
+    # version_config={
+    #     "version_format": "{tag}.dev{sha}",
+    #     "starting_version": "0.1.0"
+    # },
 
-    setup_requires=['better-setuptools-git-version'],
+    # setup_requires=['better-setuptools-git-version'],
 
     include_package_data=True,
 )
