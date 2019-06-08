@@ -41,7 +41,8 @@ class SoundFileAdapter(AudioFile):
             self.file = sf.SoundFile(path)
             self.info = SoundFileAdapterInfo(path, self.file)
             return
-        except (RuntimeError, UnableToOpenFileError):
+
+        except:
             pass
 
         raise UnableToOpenFileError(path)

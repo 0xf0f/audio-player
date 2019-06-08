@@ -11,6 +11,7 @@ from ... import UnableToOpenFileError
 
 class FFMPEGAdapter(AudioFile):
     info: AudioInfo
+    process = None
 
     def __init__(self, path, dtype=np.float32):
         super().__init__(path, dtype)
@@ -20,7 +21,7 @@ class FFMPEGAdapter(AudioFile):
             self.samples_read = 0
             self.read_lock = th.Lock()
             return
-        except UnableToOpenFileError:
+        except:
             pass
 
         raise UnableToOpenFileError(path)

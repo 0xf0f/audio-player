@@ -64,6 +64,8 @@ class WaveformGenerationThread(qt.QThread):
             painter_path.moveTo(0, center)
 
             points = []
+            # polygon = qt.QPolygonF()
+            # polygon << qt.QPointF(0, center)
 
             for i, block in enumerate(blocks):
                 if self.interrupted:
@@ -75,6 +77,8 @@ class WaveformGenerationThread(qt.QThread):
                 bar_height = abs(block.max()) * height
                 bar_bottom = (height-bar_height)/2
 
+                # polygon << qt.QPointF(i, bar_bottom)
+                # polygon << qt.QPointF(i, height-bar_bottom)
                 painter_path.lineTo(i, bar_bottom)
                 points.append((i, height-bar_bottom))
 
@@ -92,9 +96,12 @@ class WaveformGenerationThread(qt.QThread):
                 painter.translate(0, -(new_height - height) / 2)
                 painter.scale(width_scale, 1 / max_value)
 
+            # painter_path.addPolygon(polygon)
+
         brush = qt.QBrush()
         brush.setColor(qt.constants.gray)
         brush.setStyle(qt.constants.SolidPattern)
+        # painter.drawPolygon(polygon)
         painter.fillPath(painter_path, brush)
 
         self.pixmap = pixmap
@@ -116,7 +123,6 @@ class WaveformWidget(qt.QWidget):
         self.resize_timer = qt.QTimer()
         self.resize_timer.setSingleShot(True)
         self.resize_timer.timeout.connect(self.resize_done)
-
 
     def waveform_updated(self):
         self.pixmap = self.waveform_generation_thread.pixmap

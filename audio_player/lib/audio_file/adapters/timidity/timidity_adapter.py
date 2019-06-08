@@ -46,7 +46,7 @@ class TiMidityAdapter(AudioFile):
             self.samples_read = 0
             self.read_lock = th.Lock()
             return
-        except (FileNotFoundError, UnableToOpenFileError):
+        except:
             pass
 
         raise UnableToOpenFileError(path)

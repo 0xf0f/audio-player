@@ -1,6 +1,7 @@
 # from .audio_player import AudioPlayer
 from .audio_player_process import AudioPlayerProcess
 import threading as th
+import weakref as wr
 
 from .audio_player_settings import Settings as AudioPlayerSettings
 from .audio_player_signals import Signals as AudioPlayerSignals
@@ -17,10 +18,10 @@ class AudioPlayerProcessInterface:
         def __init__(self, controller: 'AudioPlayerProcessInterface'):
             super().__init__()
 
-            self.controller = controller
+            self.controller = wr.ref(controller)
 
             def pipe_to_command(setting_name):
-                return lambda *args, **kwargs: self.controller.send_command(
+                return lambda *args, **kwargs: self.controller().send_command(
                     f'set_{setting_name}', *args
                 )
 
@@ -51,13 +52,12 @@ class AudioPlayerProcessInterface:
 
         self.process = AudioPlayerProcess()
         self.command_queue = self.process.command_queue
-        # self.process.start()
 
         self.signal_thread = AudioPlayerProcessInterface.SignalThread(self)
         self.signal_thread.start()
 
     def __del__(self):
-        if self.process:
+        if self.process and self.process.is_alive():
             self.process.terminate()
 
     def start_process(self):
