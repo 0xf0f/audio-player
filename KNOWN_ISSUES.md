@@ -1,3 +1,3 @@
-- mediainfo reports incorrect sampel counts/duration. disabled for the time being.
+- mediainfo reports incorrect sample counts/duration. disabled for the time being.
 - ffmpeg seeks modfiles incorrectly. considering switching to xmp for rendering for the time being.
 	- looks like timidity supports mod playback too
