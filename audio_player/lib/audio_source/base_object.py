@@ -1,19 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Tuple
 from cached_property import cached_property as cachedproperty
 import numpy as np
 
-from ..audio_info.audio_info import AudioInfo
+from ..audio_info.base_object import AudioInfo
 
 
-class AudioFile(ABC):
+class AudioSource(ABC):
     info: AudioInfo
-    supported_extensions: Tuple
-
-    @abstractmethod
-    def __init__(self, path, dtype=np.float32):
-        self.path = path
-        self.dtype = dtype
 
     @abstractmethod
     @cachedproperty
@@ -22,19 +15,19 @@ class AudioFile(ABC):
 
     @cachedproperty
     def sample_width(self) -> int:
-        return self.info.channels * np.dtype(self.dtype).itemsize
+        return self.info.channels * np.dtype(np.float32).itemsize
 
     @abstractmethod
-    def read(self, n=-1, out: np.ndarray = None) -> np.ndarray:
+    def read(self, samples=-1, out: np.ndarray = None) -> np.ndarray:
         raise NotImplementedError
 
-    @abstractmethod
-    def readable(self):
-        pass
+    # @abstractmethod
+    # def readable(self):
+    #     pass
 
     def blocks(self, block_size=4096):
         buffer = np.empty(
-            (block_size, self.info.channels), dtype=self.dtype
+            (block_size, self.info.channels), dtype=np.float32
         )
 
         while True:
@@ -72,3 +65,9 @@ class AudioFile(ABC):
     @abstractmethod
     def close(self):
         raise NotImplementedError
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
