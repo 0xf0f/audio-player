@@ -7,34 +7,36 @@ from audio_player.util.constants.binary_paths import (
 
 
 def timidity_time_format(milliseconds):
+    milliseconds = int(milliseconds)
     seconds, milliseconds = divmod(milliseconds, 1000)
     minutes, seconds = divmod(seconds, 60)
     return f'{minutes}:{seconds}.{milliseconds}'
 
 
-class ms(int):
-    pass
-
-
-def timidity_process(
+def timidity_decoding_process(
         file_path,
-        start_time: ms = 0,
-        config=default_cfg_path,
+        from_position: float = 0,
+        # config=default_cfg_path,
+        soundfont=default_soundfont_path,
         timidity_path=default_timidity_path,
 ):
+    soundfont = Path(soundfont)
+
     process = sp.Popen(
         [
             timidity_path,
-            '-c', config,
-            '-G', timidity_time_format(int(start_time)),
+            # '-c', config,
+            '-x', f'soundfont "{soundfont.name}"',
+            '-L', f'{soundfont.parent}',
+            '-G', timidity_time_format(from_position * 1000),
             '-Or1sl',
             '-o', '-',
-            str(Path(file_path).absolute()),
+            f'{file_path}',
         ],
 
         stdout=sp.PIPE,
         stderr=sp.DEVNULL,
 
-        cwd=str(Path(config).parent),
+        # cwd=str(Path(config).parent),
     )
     return process
