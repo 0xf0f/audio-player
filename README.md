@@ -10,8 +10,25 @@ timidity
 sox
 
 ### Examples
-TODO
+```python
+# Basic playback
 
+from audio_player import AudioPlayer
+
+player = AudioPlayer()
+player.play('file.wav')
+```
+
+```python
+from audio_player import AudioPlayer
+
+player = AudioPlayer()
+player.set_file('file.wav')
+new_position = player.file.info.duration / 2
+player.seek_time(new_position)
+player.resume()
+
+```
 ### Documentation
 TODO
 
