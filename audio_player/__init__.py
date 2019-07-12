@@ -10,6 +10,13 @@ __all__ = [
 ]
 
 
+def play(path):
+    from . import AudioPlayer
+    player = AudioPlayer()
+    player.play(path)
+    player.wait()
+
+
 def __getattr__(name):
     if name == 'AudioPlayer':
         from .audio_player import AudioPlayer
