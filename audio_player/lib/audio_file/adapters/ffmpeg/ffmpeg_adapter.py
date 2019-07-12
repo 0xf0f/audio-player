@@ -1,47 +1,50 @@
 import numpy as np
+import subprocess as sp
 import threading as th
 
-from cached_property import cached_property as cachedproperty
-from .ffmpeg_process import decode
-from audio_player.lib.audio_file.audio_file import AudioFile
-from audio_player.lib.audio_info.audio_info import AudioInfo
-from audio_player.lib import audio_info
-from ... import UnableToOpenFileError
+from .ffmpeg_process import ffmpeg_decoding_process
+from cached_property import cached_property
+
+from ...base_object import AudioFile
+from audio_player.lib.audio_info.adapters.ffprobe import FFProbeAdapter
+from audio_player.util.adapters import UnableToAdapt
 
 
 class FFMPEGAdapter(AudioFile):
-    info: AudioInfo
+    info: FFProbeAdapter
     process = None
 
-    def __init__(self, path, dtype=np.float32):
-        super().__init__(path, dtype)
+    def __init__(self, path: str):
+        super().__init__(path)
+
+        self.process: sp.Popen = None
+        self.samples_read = 0
+        self.read_lock = th.Lock()
+
+    @classmethod
+    def adapt(cls, path: str):
         try:
-            self.process = decode(path)
-            self.info = audio_info.open(self.path)
-            self.samples_read = 0
-            self.read_lock = th.Lock()
-            return
+            result = cls(path)
+            result.info: FFProbeAdapter = FFProbeAdapter.adapt(path)
+            result.process = ffmpeg_decoding_process(path)
+            # print('yo')
+            return result
         except:
-            pass
+            # print('crap')
+            raise UnableToAdapt
 
-        raise UnableToOpenFileError(path)
-
-    def __del__(self):
-        self.close()
-
-    @cachedproperty
-    def info(self) -> AudioInfo:
+    @cached_property
+    def info(self) -> FFProbeAdapter:
         pass
 
     def read(self, n=-1, out: np.ndarray = None) -> np.ndarray:
-        # process = self.process
         with self.read_lock:
             if n == -1:
                 n = self.info.sample_count
 
             if out is None:
                 out = np.empty(
-                    (n, self.info.channels), dtype=self.dtype
+                    (n, self.info.channels), dtype=np.float32
                 )
 
             bytes_read = self.process.stdout.readinto(out)
@@ -51,20 +54,19 @@ class FFMPEGAdapter(AudioFile):
 
             return out[:samples_read]
 
-    def readable(self):
-        return self.samples_read < self.info.sample_count
-
     def tell_time(self) -> float:
-        # print(self.info.duration, self.samples_read, self.info.sample_count)
         return self.info.duration * (self.samples_read / self.info.sample_count)
 
     def seek_time(self, seconds: float) -> float:
         with self.read_lock:
             if self.process:
                 self.process.terminate()
-            self.process = decode(self.path, from_position=seconds)
+            self.process = ffmpeg_decoding_process(self.path, from_position=seconds)
             self.samples_read = int((seconds / self.info.duration) * self.info.sample_count)
             return seconds
+
+    # def readable(self):
+    #     return self.file.tell() < self.file.frames
 
     def close(self):
         if self.process:

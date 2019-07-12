@@ -1,11 +1,9 @@
 import subprocess as sp
-import sys
 
 
-def decode(
+def ffmpeg_decoding_process(
     path, from_position=0, sample_rate=None, channels=None
 ):
-    # print('from_position', from_position)
     format_options = []
     if sample_rate is not None:
         format_options.extend(('-ar', f'{sample_rate}'))
@@ -18,7 +16,6 @@ def decode(
             '-i', path,
             '-f', 'f32le',
             *format_options,
-            # '-af', 'areverse',
             '-'
         ],
         stdout=sp.PIPE,

@@ -1,65 +1,41 @@
 import numpy as np
+import subprocess as sp
 import threading as th
-import mido
 
-from cached_property import cached_property as cachedproperty
-from .timidity_process import timidity_process
-from audio_player.lib.audio_file.audio_file import AudioFile
-from audio_player.lib.audio_info.audio_info import AudioInfo
-from ... import UnableToOpenFileError
+from .timidity_process import timidity_decoding_process
+from cached_property import cached_property
 
-
-class TiMidityInfo(AudioInfo):
-    def __init__(self, path):
-        super().__init__(path)
-        try:
-            midi_object = mido.MidiFile(path)
-            self.channels = 2
-            self.sample_rate = 44100
-            self.sample_count = int(midi_object.length * self.sample_rate)
-            return
-
-        except (OSError, FileNotFoundError, EOFError):
-            pass
-
-        raise UnableToOpenFileError(path)
-
-    def channels(self) -> int:
-        pass
-
-    def sample_rate(self) -> int:
-        pass
-
-    def sample_count(self) -> int:
-        pass
+from ...base_object import AudioFile
+from ....audio_info.adapters.mido import MidoAdapter
+from audio_player.util.adapters import UnableToAdapt
 
 
 class TiMidityAdapter(AudioFile):
-    info: AudioInfo
+    info: MidoAdapter
     process = None
 
-    def __init__(self, path, dtype=np.float32):
-        super().__init__(path, dtype)
+    def __init__(self, path: str):
+        super().__init__(path)
+
+        self.process: sp.Popen = None
+        self.samples_read = 0
+        self.read_lock = th.Lock()
+
+    @classmethod
+    def adapt(cls, path: str):
         try:
-            self.process = timidity_process(path)
-            self.info = TiMidityInfo(self.path)
-            self.samples_read = 0
-            self.read_lock = th.Lock()
-            return
+            result = cls(path)
+            result.info = MidoAdapter.adapt(path)
+            result.process = timidity_decoding_process(path)
+            return result
         except:
-            pass
+            raise UnableToAdapt
 
-        raise UnableToOpenFileError(path)
-
-    def __del__(self):
-        self.close()
-
-    @cachedproperty
-    def info(self) -> AudioInfo:
+    @cached_property
+    def info(self) -> MidoAdapter:
         pass
 
     def read(self, n=-1, out: np.ndarray = None, int_buffer: np.ndarray=None) -> np.ndarray:
-        # process = self.process
         with self.read_lock:
             if n == -1:
                 n = self.info.sample_count
@@ -71,7 +47,7 @@ class TiMidityAdapter(AudioFile):
 
             if out is None:
                 out = np.empty(
-                    (n, self.info.channels), dtype=self.dtype
+                    (n, self.info.channels), dtype=np.float32
                 )
 
             bytes_read = self.process.stdout.readinto(int_buffer)
@@ -88,7 +64,7 @@ class TiMidityAdapter(AudioFile):
         )
 
         out_buffer = np.empty(
-            (block_size, self.info.channels), dtype=self.dtype
+            (block_size, self.info.channels), dtype=np.float32
         )
 
         while True:
@@ -101,28 +77,20 @@ class TiMidityAdapter(AudioFile):
             else:
                 break
 
-    def readable(self):
-        return self.samples_read < self.info.sample_count
-
     def tell_time(self) -> float:
-        # print(self.info.duration, self.samples_read, self.info.sample_count)
         return self.info.duration * (self.samples_read / self.info.sample_count)
 
     def seek_time(self, seconds: float) -> float:
         with self.read_lock:
             if self.process:
                 self.process.terminate()
-            self.process = timidity_process(self.path, start_time=seconds*1000)
+            self.process = timidity_decoding_process(self.path, from_position=seconds)
             self.samples_read = int((seconds / self.info.duration) * self.info.sample_count)
             return seconds
+
+    # def readable(self):
+    #     return self.file.tell() < self.file.frames
 
     def close(self):
         if self.process:
             self.process.terminate()
-
-    supported_extensions = (
-        'mid',
-        'mod',
-        's3m'
-        'xm',
-    )
