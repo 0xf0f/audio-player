@@ -1,12 +1,21 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .audio_player import AudioPlayer
-    from .audio_player_process_interface import AudioPlayerProcessInterface
+    from .lib.audio_player.base_object import AudioPlayer
+    from .lib.audio_player_process.audio_player_process_interface import AudioPlayerProcessInterface
+
+    from .lib import audio_file
+    from .lib import audio_info
+    from .lib import audio_processor
+
 
 __all__ = [
     'AudioPlayer',
-    'AudioPlayerProcessInterface'
+    'AudioPlayerProcessInterface',
+    'audio_file',
+    'audio_info',
+    'audio_processor',
+    'play'
 ]
 
 
@@ -19,12 +28,26 @@ def play(path):
 
 def __getattr__(name):
     if name == 'AudioPlayer':
-        from .audio_player import AudioPlayer
+        from .lib.audio_player.base_object import AudioPlayer
         return AudioPlayer
 
     elif name == 'AudioPlayerProcessInterface':
-        from .audio_player_process_interface import AudioPlayerProcessInterface
+        from .lib.audio_player_process.audio_player_process_interface import AudioPlayerProcessInterface
         return AudioPlayerProcessInterface
+
+    elif name == 'audio_file':
+        from .lib import audio_file
+        return audio_file
+
+    elif name == 'audio_info':
+        from .lib import audio_info
+        return audio_info
+
+    elif name == 'audio_processor':
+        from .lib import audio_processor
+
+    elif name == 'play':
+        return play
 
     else:
         raise ImportError
