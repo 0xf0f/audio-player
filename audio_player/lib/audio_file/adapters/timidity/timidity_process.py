@@ -1,9 +1,9 @@
 import subprocess as sp
 from pathlib import Path
-
-cd = Path(__file__).parent
-default_timidity_path = str(cd / 'timidity.exe')
-default_cfg_path = str(cd/'default.cfg')
+from audio_player.util.constants.binary_paths import (
+    timidity_path as default_timidity_path,
+    default_soundfont_path
+)
 
 
 def timidity_time_format(milliseconds):
