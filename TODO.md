@@ -38,14 +38,18 @@
 	to transmit samplerate/channel dare per block. Also a way to switch/change the
 	SoX process at any time.
 
-- Fast adapter selection - A dict mapping extensions to adapters.
-	- If extension is not in map then it defaults back to slow selection,
-	runs through all the adapters to find one that works.
+- ~~Fast adapter selection - A dict mapping extensions to adapters.~~
+	- ~~If extension is not in map then it defaults back to slow selection,
+	runs through all the adapters to find one that works.~~
 	
 - Better, more granular error handling and reporting.
 
 - A-B looping. Use buffers?
 
-- Decouple AudioFile and decoders.
+- Decouple AudioSource and decoders.
 
 - Automatically update duration/sample count of files if (during playback) they exceed/fall short of what is reported by AudioInfo.
+
+- ~~Timidity linux handler~~
+
+- Figure out licensing.
