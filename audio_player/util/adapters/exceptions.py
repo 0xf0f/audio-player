@@ -1,0 +1,2 @@
+class UnableToAdapt(Exception):
+    pass
