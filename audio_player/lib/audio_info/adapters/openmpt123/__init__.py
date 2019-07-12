@@ -1,0 +1,1 @@
+from .openmpt123_adapter import OpenMPT123Adapter
