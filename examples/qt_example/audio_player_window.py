@@ -133,9 +133,9 @@ class AudioPlayerWindow(qt.QWidget):
             on_state_changed
         )
 
-        self.controller.qsignals.file_changed.connect(
-            self.seek_bar.set_path
-        )
+        # self.controller.qsignals.source_changed.connect(
+        #     self.seek_bar.set_path
+        # )
 
         self.setWindowTitle('Audio Player')
         self.setAcceptDrops(True)
@@ -153,6 +153,7 @@ class AudioPlayerWindow(qt.QWidget):
             url: qt.QUrl = mime_data.urls()[0]
             path = url.toLocalFile()
             self.controller.play(path)
+            self.seek_bar.set_path(path)
 
     def __del__(self):
         if self.controller and self.controller.process:

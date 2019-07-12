@@ -7,13 +7,13 @@ if __name__ == '__main__':
 
     cd: Path = Path(__file__).parent
     sys.path.append(str(cd))
-    sys.path.append(str(cd.parent))
+    # sys.path.append(str(cd.parent))
     sys.path.append(str(cd.parent.parent))
 
     # from quicklogger.templates import DefaultLoggingTemplate
     # lg = DefaultLoggingTemplate()
     # lg.intercept_except_hook()
-    # lg.outs[:] = (
+    # lg.outs = (
     #     open('log.txt', 'a'),
     #     sys.stderr
     # )
