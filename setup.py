@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='audio-player',
-    version='190531.0',
+    version='19.05.31.0',
     packages=find_packages(),
     url='https://github.com/0xf0f/audio-player',
     license='MIT',
