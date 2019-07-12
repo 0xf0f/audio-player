@@ -14,6 +14,10 @@ class TiMidityAdapter(AudioFile):
     info: MidoAdapter
     process = None
 
+    supported_extensions = (
+        '.mid',
+    )
+
     def __init__(self, path: str):
         super().__init__(path)
 
