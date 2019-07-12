@@ -1,1 +1,2 @@
 include audio_player/lib/audio_file/adapters/timidity/*.*
+include audio_player/lib/audio_file/adapters/openmpt123/*.*
