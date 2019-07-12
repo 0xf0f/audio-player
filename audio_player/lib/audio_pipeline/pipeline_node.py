@@ -4,7 +4,7 @@ from audio_player.util.signals import Signal
 
 
 class PipelineNode:
-    def __init__(self, buffer: Queue=None):
+    def __init__(self, buffer: Queue = None):
         if buffer is None:
             buffer = Queue()
             buffer.maxsize = 1
@@ -46,6 +46,9 @@ class PipelineNode:
 
     def connect_to(self, callback):
         self.output.connect(callback)
+
+    def wait(self):
+        self.buffer.join()
 
     def __call__(self, item):
         self.buffer.put(item)
