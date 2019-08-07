@@ -49,7 +49,7 @@ class AudioPlayerProcess(mp.Process):
             'set_pan': self.audio_player.settings.pan.set,
             'set_balance': self.audio_player.settings.balance.set,
             'set_playback_rate': self.audio_player.settings.playback_rate.set,
-            'set_looping': self.audio_player.settings.looping.set
+            'set_looping': self.audio_player.settings.looping.set,
         }
 
         self.audio_player.resume()

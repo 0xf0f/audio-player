@@ -29,17 +29,6 @@ class AudioPlayer:
 
         self.state = AudioPlayer.States.stopped
 
-    def set_file(self, path):
-        try:
-            self.file = af.open(path)
-            self.signals.file_changed(path)
-            self.signals.duration_changed(self.file.info.duration)
-
-        except af.UnableToOpenFileError:
-            self.file = None
-            self.signals.file_changed(None)
-            self.signals.duration_changed(0)
-
     def get_output(self, samplerate, channels):
         try:
             return self.output_cache[samplerate, channels]
@@ -81,17 +70,29 @@ class AudioPlayer:
                 self.stop()
                 continue
 
+    def set_file(self, path):
+        try:
+            self.file = af.open(path)
+            self.signals.file_changed(path)
+            self.signals.duration_changed(self.file.info.duration)
+            return True
+
+        except af.UnableToOpenFileError:
+            return False
+
+            # self.file = None
+            # self.signals.file_changed(None)
+            # self.signals.duration_changed(0)
+
     def set_state(self, state):
         if self.state != state:
             self.state = state
             self.signals.state_changed(state)
 
     def play(self, path=None):
-        self.set_file(path)
-        self.signals.file_changed(path)
-
-        self.paused.set()
-        self.set_state(AudioPlayer.States.playing)
+        if self.set_file(path):
+            self.paused.set()
+            self.set_state(AudioPlayer.States.playing)
 
     def toggle(self):
         if self.state == AudioPlayer.States.playing:
